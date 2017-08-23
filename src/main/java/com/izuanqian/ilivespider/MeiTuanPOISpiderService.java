@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -159,7 +160,7 @@ public class MeiTuanPOISpiderService {
 //        log.info(regionHome);
         Document root = Jsoup.connect(regionHome)
                 .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.86 Safari/537.36")
-                .data("host", "www.meituan.com")
+                .header("host", "www.meituan.com")
                 .cookie("__mta", "47061784.1503301718068.1503326547978.1503330709500.163")
                 .cookie("__utma", "211559370.491683399.1503301715.1503324363.1503330710.6")
                 .cookie("__utmb", "211559370.1.10.1503330710")
@@ -181,6 +182,7 @@ public class MeiTuanPOISpiderService {
                 .cookie("tipssecurequestion", "1")
                 .cookie("tipsuser", "1")
                 .cookie("uuid", "8ce8cab0d8034d399fb6.1503301732.0.0.0")
+
                 .get();
 
         Elements regionRoot = root.select(".component-filter-geo").select(".sub-filter-wrapper").select("ul").select("a");
@@ -278,9 +280,8 @@ public class MeiTuanPOISpiderService {
 
     @SneakyThrows
     public Document doc(String url) {
-//        Thread.sleep(5000);
         Collections.shuffle(agents);
-        Document root = Jsoup.connect(url)
+        Connection connection = Jsoup.connect(url)
                 .userAgent(agents.stream().findAny().get())
                 .data("host", "www.meituan.com")
                 .cookie("__mta", "116692409.1503330869866.1503413222808.1503413227327.12")
@@ -306,8 +307,14 @@ public class MeiTuanPOISpiderService {
                 .cookie("uuid", "bc80068a06815ccfaf59.1503330874.0.0.0")
                 .cookie("em", "bnVsbA")
                 .cookie("om", "bnVsbA")
-                .cookie("_lx_utm", "utm_source=tg.meituan.com&utm…ium=referral&utm_content=%2F")
-//                .proxy("hk-965.hxg.cc",33624)
+                .cookie("_lx_utm", "utm_source=tg.meituan.com&utm…ium=referral&utm_content=%2F");
+        MeiTuanPOISpiderRepository.ConfProxy confProxy = meiTuanPOISpiderRepository.popProxy();
+        if (Objects.nonNull(confProxy)) {
+            connection.proxy(confProxy.getAddress(), confProxy.getPort());
+            log.info("{}", confProxy);
+        }
+        Document root = connection
+//                .proxy("114.112.65.242", 3128)
                 .get();
         return root;
     }
@@ -348,6 +355,7 @@ public class MeiTuanPOISpiderService {
                 log.info("共{}页", pageQuery.size());
             }
         }catch (Exception e){
+            log.error(e.getMessage());
             meiTuanPOISpiderRepository.saveQueryByFail(query.getKey(), query.getQuery());
         }
     }

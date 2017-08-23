@@ -1,6 +1,7 @@
 package com.izuanqian.ilivespider;
 
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
@@ -244,9 +245,9 @@ public class MeiTuanPOISpiderRepository {
     public void savePoi(String key, String query, Set<Long> value) {
         template.opsForSet()
                 .add(Key.__("spider:mt:poi:{0}", key(query)),
-                        value.stream().map(it->String.valueOf(it)).collect(Collectors.toSet()).toArray(new String[value.size()]));
+                        value.stream().map(it -> String.valueOf(it)).collect(Collectors.toSet()).toArray(new String[value.size()]));
         template.opsForList().leftPush(key + "_", query);
-     log.info("直接保存成功");
+        log.info("直接保存成功");
     }
 
     @Data
@@ -261,8 +262,19 @@ public class MeiTuanPOISpiderRepository {
         template.opsForList().rightPushAll(poppedKey + "_page", pageQuery);
     }
 
-    public void saveQueryByFail(String key, String query){
-        template.opsForList().leftPush(key,query);
+    public void saveQueryByFail(String key, String query) {
+        template.opsForList().leftPush(key, query);
         log.info("重新插入到了队列末");
+    }
+
+    public ConfProxy popProxy() {
+        String value = template.opsForList().rightPopAndLeftPush("spider:mt:proxy", "spider:mt:proxy");
+        return Strings.isNullOrEmpty(value) ? null : new Gson().fromJson(value, ConfProxy.class);
+    }
+
+    @Data
+    public static class ConfProxy {
+        private String address;
+        private int port;
     }
 }
