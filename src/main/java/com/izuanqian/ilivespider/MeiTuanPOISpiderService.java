@@ -328,7 +328,7 @@ public class MeiTuanPOISpiderService {
     }
 
 
-    @Scheduled(cron = "*/2 * * ? * *")
+    @Scheduled(cron = "*/3 * * ? * *")
     public void toPage() {
 
         MeiTuanPOISpiderRepository.PoppedQuery query = meiTuanPOISpiderRepository.popQuery();

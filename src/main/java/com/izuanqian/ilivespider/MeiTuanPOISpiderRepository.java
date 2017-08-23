@@ -222,7 +222,7 @@ public class MeiTuanPOISpiderRepository {
     public PoppedQuery popQuery() {
         String pattern = Key.__("spider:mt:query_{0}", "*");
         Set<String> keys = template.keys(pattern);
-        String key = keys.stream().findFirst().get();
+        String key = keys.stream().filter(it-> !it.endsWith("_")).filter(it -> !it.endsWith("_page")).sorted().findFirst().get();
         String query = template.opsForList().rightPopAndLeftPush(key, key + "_");
         return new PoppedQuery(key, query);
     }
