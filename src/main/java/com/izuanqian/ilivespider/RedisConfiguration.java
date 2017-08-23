@@ -1,5 +1,6 @@
 package com.izuanqian.ilivespider;
 
+import com.google.common.base.Strings;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -48,7 +49,7 @@ public class RedisConfiguration {
         JedisConnectionFactory jedis = new JedisConnectionFactory();
         jedis.setHostName(host);
         jedis.setPort(port);
-        if (Objects.isNull(password) || password.isEmpty()) {
+        if (!Strings.isNullOrEmpty(password)) {
             jedis.setPassword(password);
         }
         if (index != 0) {
