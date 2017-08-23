@@ -268,11 +268,23 @@ public class MeiTuanPOISpiderRepository {
     }
 
     public ConfProxy popProxy() {
-        String value = template.opsForList().rightPopAndLeftPush("spider:mt:proxy", "spider:mt:proxy");
-        return Strings.isNullOrEmpty(value) ? null : new Gson().fromJson(value, ConfProxy.class);
+        HashOperations<String, String, String> hash = template.opsForHash();
+        List<String> values = hash.values("spider:mt:newproxy");
+        if (Objects.isNull(values) || values.isEmpty()) {
+            return null;
+        }
+        Collections.shuffle(values);
+        String[] split = values.get(0).split(":");
+        return new ConfProxy(split[0], Integer.parseInt(split[1]));
+    }
+
+    public void removeProxy(String address){
+        HashOperations<String, String, String> hash = template.opsForHash();
+        hash.delete("spider:mt:newproxy", address);
     }
 
     @Data
+    @AllArgsConstructor
     public static class ConfProxy {
         private String address;
         private int port;

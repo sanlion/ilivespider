@@ -258,7 +258,8 @@ public class MeiTuanPOISpiderService {
 
         MeiTuanPOISpiderRepository.PoppedQuery poppedQuery = meiTuanPOISpiderRepository.popPageQuery();
         log.info("{},{}", poppedQuery.getKey(), poppedQuery.getQuery());
-        Document root = doc(poppedQuery.getQuery());
+        MeiTuanPOISpiderRepository.ConfProxy confProxy = meiTuanPOISpiderRepository.popProxy();
+        Document root = doc(poppedQuery.getQuery(), confProxy);
         Element content = root.getElementById("content");
         String poilist = content.select(".J-scrollloader").first().attr("data-async-params");
         Set<Long> li = listPoi(poilist);
@@ -279,7 +280,7 @@ public class MeiTuanPOISpiderService {
             "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 10.0; WOW64; Trident/7.0; .NET4.0C; .NET4.0E)");
 
     @SneakyThrows
-    public Document doc(String url) {
+    public Document doc(String url, MeiTuanPOISpiderRepository.ConfProxy confProxy) {
         Collections.shuffle(agents);
         Connection connection = Jsoup.connect(url)
                 .userAgent(agents.stream().findAny().get())
@@ -308,10 +309,8 @@ public class MeiTuanPOISpiderService {
                 .cookie("em", "bnVsbA")
                 .cookie("om", "bnVsbA")
                 .cookie("_lx_utm", "utm_source=tg.meituan.com&utm…ium=referral&utm_content=%2F");
-        MeiTuanPOISpiderRepository.ConfProxy confProxy = meiTuanPOISpiderRepository.popProxy();
         if (Objects.nonNull(confProxy)) {
             connection.proxy(confProxy.getAddress(), confProxy.getPort());
-            log.info("{}", confProxy.getAddress());
         }
         Document root = connection
 //                .proxy("114.112.65.242", 3128)
@@ -335,7 +334,12 @@ public class MeiTuanPOISpiderService {
         log.info("{},{}", query.getKey(), query.getQuery());
         try{
             List<String> pageQuery = Lists.newArrayList();
-            Document root = doc(query.getQuery());
+            MeiTuanPOISpiderRepository.ConfProxy confProxy = meiTuanPOISpiderRepository.popProxy();
+            if (Objects.isNull(confProxy)) {
+                log.error("proxy pool is empty.");
+                return;
+            }
+            Document root = doc(query.getQuery(), confProxy);
             Element content = root.getElementById("content");
             String poilist = content.select(".J-scrollloader").first().attr("data-async-params");
             Set<Long> ids = listPoi(poilist);
