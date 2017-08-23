@@ -311,7 +311,7 @@ public class MeiTuanPOISpiderService {
         MeiTuanPOISpiderRepository.ConfProxy confProxy = meiTuanPOISpiderRepository.popProxy();
         if (Objects.nonNull(confProxy)) {
             connection.proxy(confProxy.getAddress(), confProxy.getPort());
-            log.info("{}", confProxy);
+            log.info("{}", confProxy.getAddress());
         }
         Document root = connection
 //                .proxy("114.112.65.242", 3128)
@@ -328,7 +328,7 @@ public class MeiTuanPOISpiderService {
     }
 
 
-    @Scheduled(cron = "*/4 * * ? * *")
+    @Scheduled(cron = "*/2 * * ? * *")
     public void toPage() {
 
         MeiTuanPOISpiderRepository.PoppedQuery query = meiTuanPOISpiderRepository.popQuery();
