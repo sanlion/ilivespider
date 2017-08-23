@@ -253,7 +253,7 @@ public class MeiTuanPOISpiderService {
         // {home}/category/{category}/{area}
     }
 
-//        @Scheduled(cron = "*/12 * * ? * *")
+    //        @Scheduled(cron = "*/12 * * ? * *")
     public void loadpoidetailquery() {
 
         MeiTuanPOISpiderRepository.PoppedQuery poppedQuery = meiTuanPOISpiderRepository.popPageQuery();
@@ -332,9 +332,10 @@ public class MeiTuanPOISpiderService {
 
         MeiTuanPOISpiderRepository.PoppedQuery query = meiTuanPOISpiderRepository.popQuery();
         log.info("{},{}", query.getKey(), query.getQuery());
-        try{
+        MeiTuanPOISpiderRepository.ConfProxy confProxy = meiTuanPOISpiderRepository.popProxy();
+        try {
             List<String> pageQuery = Lists.newArrayList();
-            MeiTuanPOISpiderRepository.ConfProxy confProxy = meiTuanPOISpiderRepository.popProxy();
+
             if (Objects.isNull(confProxy)) {
                 log.error("proxy pool is empty.");
                 return;
@@ -358,9 +359,10 @@ public class MeiTuanPOISpiderService {
                 meiTuanPOISpiderRepository.savePageQuery(query.getKey(), pageQuery);
                 log.info("共{}页", pageQuery.size());
             }
-        }catch (Exception e){
-            log.error(e.getMessage());
+        } catch (Exception e) {
+            log.error(confProxy.getAddress() + " => " + e.getMessage());
             meiTuanPOISpiderRepository.saveQueryByFail(query.getKey(), query.getQuery());
+            meiTuanPOISpiderRepository.removeProxy(confProxy.getAddress());
         }
     }
 

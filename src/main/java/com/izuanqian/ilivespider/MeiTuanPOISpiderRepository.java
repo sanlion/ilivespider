@@ -279,8 +279,12 @@ public class MeiTuanPOISpiderRepository {
     }
 
     public void removeProxy(String address){
-        HashOperations<String, String, String> hash = template.opsForHash();
-        hash.delete("spider:mt:newproxy", address);
+        long l = template.opsForValue().increment(Key.__("spider:mt:newproxy:{0}", address), 1).longValue();
+        if(l >=20){
+            HashOperations<String, String, String> hash = template.opsForHash();
+            hash.delete("spider:mt:newproxy", address);
+            log.info("{} remove from proxy poll", address);
+        }
     }
 
     @Data
