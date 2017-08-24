@@ -287,13 +287,15 @@ public class MeiTuanPOISpiderRepository {
         return new ConfProxy(split[0], Integer.parseInt(split[1]));
     }
 
-    public void removeProxy(String address) {
-        long l = template.opsForValue().increment(Key.__("spider:mt:newproxy:{0}", address), 1).longValue();
+    public void countProxy(String address, boolean success) {
+        long l = template.opsForValue().increment(Key.__("spider:mt:newproxy:{0}", address), success ? -1 : 1).longValue();
         if (l >= proxyLimit) {
             HashOperations<String, String, String> hash = template.opsForHash();
             hash.delete("spider:mt:newproxy", address);
             log.info("{} remove from proxy poll", address);
+            return;
         }
+        log.info("{} good proxy", address);
     }
 
     @Data

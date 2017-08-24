@@ -320,10 +320,16 @@ public class MeiTuanPOISpiderService {
             connection.proxy(confProxy.getAddress(), confProxy.getPort());
         }
         connection.timeout(3000);
-        Document root = connection
-//                .proxy("114.112.65.242", 3128)
-                .get();
-        return root;
+        try {
+            Document root = connection.get();
+            meiTuanPOISpiderRepository.countProxy(confProxy.getAddress(), true);
+            return root;
+        } catch (Exception e) {
+            log.error(confProxy.getAddress() + " => " + e.getMessage());
+            meiTuanPOISpiderRepository.countProxy(confProxy.getAddress(), false);
+            return null;
+        }
+
     }
 
     private static Set<Long> listPoi(String value) {
@@ -348,39 +354,37 @@ public class MeiTuanPOISpiderService {
             return;
         }
         log.info("{},{}", query.getKey(), query.getQuery());
-
-        try {
-            List<String> pageQuery = Lists.newArrayList();
-            Document root = doc(query.getQuery(), confProxy);
-            Element content = root.getElementById("content");
-            String poilist = content.select(".J-scrollloader").first().attr("data-async-params");
-            Set<Long> ids = listPoi(poilist);
-            if (ids.isEmpty()) {
-                log.info("Opooos~ empty.");
-                return;
-            }
-            meiTuanPOISpiderRepository.savePoi(query.getKey(), query.getQuery(), ids);
-            Set<Integer> page = content.select(".paginator").select("li").stream().map(it -> Integer.parseInt(it.attr("data-page"))).collect(Collectors.toSet());
-            if (!page.isEmpty()) {
-                page.stream().filter(it -> 1 != it)
-                        .forEach(it ->
-                                pageQuery.add(query.getQuery() + "/page" + it));
-            }
-            if (!pageQuery.isEmpty()) {
-                meiTuanPOISpiderRepository.savePageQuery(query.getKey(), pageQuery);
-                log.info("共{}页", pageQuery.size());
-            }
-        } catch (Exception e) {
-            log.error(confProxy.getAddress() + " => " + e.getMessage());
+        List<String> pageQuery = Lists.newArrayList();
+        Document root = doc(query.getQuery(), confProxy);
+        if (Objects.isNull(root)) {
             meiTuanPOISpiderRepository.saveQueryByFail(query.getKey(), query.getQuery());
-            meiTuanPOISpiderRepository.removeProxy(confProxy.getAddress());
+            return;
+        }
+        Element content = root.getElementById("content");
+        String poilist = content.select(".J-scrollloader").first().attr("data-async-params");
+        Set<Long> ids = listPoi(poilist);
+        if (ids.isEmpty()) {
+            log.info("Opooos~ empty.");
+            return;
+        }
+        meiTuanPOISpiderRepository.savePoi(query.getKey(), query.getQuery(), ids);
+        Set<Integer> page = content.select(".paginator").select("li").stream().map(it -> Integer.parseInt(it.attr("data-page"))).collect(Collectors.toSet());
+        if (!page.isEmpty()) {
+            page.stream().filter(it -> 1 != it)
+                    .forEach(it ->
+                            pageQuery.add(query.getQuery() + "/page" + it));
+        }
+        if (!pageQuery.isEmpty()) {
+            meiTuanPOISpiderRepository.savePageQuery(query.getKey(), pageQuery);
+            log.info("共{}页", pageQuery.size());
         }
     }
 
     @Value("${spider.proxy.loadsize}") int proxyLoadSize;
+
     @Scheduled(cron = "0 */2 * ? * *")
     @SneakyThrows
-    public void loadProxy(){
+    public void loadProxy() {
         String proxyHome = "http://www.xicidaili.com/nn/";
         Document document = Jsoup.connect(proxyHome).get();
         Element ip_list = document.getElementById("ip_list");
