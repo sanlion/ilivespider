@@ -306,7 +306,7 @@ public class MeiTuanPOISpiderRepository {
         }
         HashOperations<String, String, String> hash = template.opsForHash();
         Map<String, String> value = Maps.newHashMap();
-        proxys.forEach(it -> value.put(it.getAddress(), new Gson().toJson(it)));
+        proxys.forEach(it -> value.put(it.getAddress(), it.getAddress() + ":" + it.getPort()));
         hash.putAll("spider:mt:newproxy", value);
         log.info("loaded {} proxy success.", value.size());
     }
