@@ -333,17 +333,16 @@ public class MeiTuanPOISpiderService {
 
     @Scheduled(cron = "*/3 * * ? * *")
     public void toPage() {
-
+        MeiTuanPOISpiderRepository.ConfProxy confProxy = meiTuanPOISpiderRepository.popProxy();
+        if (Objects.isNull(confProxy)) {
+            log.error("proxy pool is empty.");
+            return;
+        }
         MeiTuanPOISpiderRepository.PoppedQuery query = meiTuanPOISpiderRepository.popQuery();
         log.info("{},{}", query.getKey(), query.getQuery());
-        MeiTuanPOISpiderRepository.ConfProxy confProxy = meiTuanPOISpiderRepository.popProxy();
+
         try {
             List<String> pageQuery = Lists.newArrayList();
-
-            if (Objects.isNull(confProxy)) {
-                log.error("proxy pool is empty.");
-                return;
-            }
             Document root = doc(query.getQuery(), confProxy);
             Element content = root.getElementById("content");
             String poilist = content.select(".J-scrollloader").first().attr("data-async-params");
@@ -370,7 +369,7 @@ public class MeiTuanPOISpiderService {
         }
     }
 
-    @Scheduled(cron = "0 */3 * ? * *")
+    @Scheduled(cron = "0 */2 * ? * *")
     @SneakyThrows
     public void loadProxy(){
         String proxyHome = "http://www.xicidaili.com/nt/";
