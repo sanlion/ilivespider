@@ -370,7 +370,7 @@ public class MeiTuanPOISpiderService {
         }
     }
 
-    @Scheduled(cron = "0 */7 * ? * *")
+    @Scheduled(cron = "0 */3 * ? * *")
     @SneakyThrows
     public void loadProxy(){
         String proxyHome = "http://www.xicidaili.com/nt/";
