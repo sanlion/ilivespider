@@ -372,7 +372,7 @@ public class MeiTuanPOISpiderService {
     @Scheduled(cron = "0 */2 * ? * *")
     @SneakyThrows
     public void loadProxy(){
-        String proxyHome = "http://www.xicidaili.com/nt/";
+        String proxyHome = "http://www.xicidaili.com/nn/";
         Document document = Jsoup.connect(proxyHome).get();
         Element ip_list = document.getElementById("ip_list");
         Elements tr = ip_list.select("tr");
