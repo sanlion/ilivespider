@@ -308,5 +308,6 @@ public class MeiTuanPOISpiderRepository {
         Map<String, String> value = Maps.newHashMap();
         proxys.forEach(it -> value.put(it.getAddress(), new Gson().toJson(it)));
         hash.putAll("spider:mt:newproxy", value);
+        log.info("loaded {} proxy success.", value.size());
     }
 }
