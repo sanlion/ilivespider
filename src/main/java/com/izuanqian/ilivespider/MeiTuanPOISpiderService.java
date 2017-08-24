@@ -11,6 +11,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -376,6 +377,7 @@ public class MeiTuanPOISpiderService {
         }
     }
 
+    @Value("${spider.proxy.loadsize}") int proxyLoadSize;
     @Scheduled(cron = "0 */2 * ? * *")
     @SneakyThrows
     public void loadProxy(){
@@ -383,7 +385,7 @@ public class MeiTuanPOISpiderService {
         Document document = Jsoup.connect(proxyHome).get();
         Element ip_list = document.getElementById("ip_list");
         Elements tr = ip_list.select("tr");
-        List<MeiTuanPOISpiderRepository.ConfProxy> proxy = tr.stream().skip(1).limit(6).map(it -> it.select("td"))
+        List<MeiTuanPOISpiderRepository.ConfProxy> proxy = tr.stream().skip(1).limit(proxyLoadSize).map(it -> it.select("td"))
                 .map(it -> new MeiTuanPOISpiderRepository.ConfProxy(it.get(1).text(), Integer.parseInt(it.get(2).text())))
                 .collect(Collectors.toList());
         meiTuanPOISpiderRepository.saveProxy(proxy);
