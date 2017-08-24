@@ -257,6 +257,9 @@ public class MeiTuanPOISpiderService {
     public void loadpoidetailquery() {
 
         MeiTuanPOISpiderRepository.PoppedQuery poppedQuery = meiTuanPOISpiderRepository.popPageQuery();
+        if (Objects.isNull(poppedQuery)) {
+            return;
+        }
         log.info("{},{}", poppedQuery.getKey(), poppedQuery.getQuery());
         MeiTuanPOISpiderRepository.ConfProxy confProxy = meiTuanPOISpiderRepository.popProxy();
         Document root = doc(poppedQuery.getQuery(), confProxy);
@@ -312,6 +315,7 @@ public class MeiTuanPOISpiderService {
         if (Objects.nonNull(confProxy)) {
             connection.proxy(confProxy.getAddress(), confProxy.getPort());
         }
+        connection.timeout(3000);
         Document root = connection
 //                .proxy("114.112.65.242", 3128)
                 .get();

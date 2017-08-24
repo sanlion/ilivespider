@@ -9,6 +9,7 @@ import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -25,6 +26,8 @@ public class MeiTuanPOISpiderRepository {
     @Autowired
     @Qualifier("poiRedisTemplate")
     private StringRedisTemplate template;
+    @Value("${spider.proxy.limit}") int proxyLimit;
+    @Value("${spider.query.index}") int queryIndex;
 
     public void initCityHome(List<City> cities) {
         if (hasInitCityHome()) {
@@ -220,10 +223,12 @@ public class MeiTuanPOISpiderRepository {
     }
 
     public PoppedQuery popQuery() {
-        String pattern = Key.__("spider:mt:query_{0}", "*");
-        Set<String> keys = template.keys(pattern);
-        String key = keys.stream().filter(it-> !it.endsWith("_")).filter(it -> !it.endsWith("_page")).sorted().findFirst().get();
+        String key = Key.__("spider:mt:query_{0}", queryIndex);
         String query = template.opsForList().rightPopAndLeftPush(key, key + "_");
+        if (Strings.isNullOrEmpty(query)) {
+            log.error("{} is empty", key);
+            return null;
+        }
         return new PoppedQuery(key, query);
     }
 
@@ -278,9 +283,9 @@ public class MeiTuanPOISpiderRepository {
         return new ConfProxy(split[0], Integer.parseInt(split[1]));
     }
 
-    public void removeProxy(String address){
+    public void removeProxy(String address) {
         long l = template.opsForValue().increment(Key.__("spider:mt:newproxy:{0}", address), 1).longValue();
-        if(l >=20){
+        if (l >= proxyLimit) {
             HashOperations<String, String, String> hash = template.opsForHash();
             hash.delete("spider:mt:newproxy", address);
             log.info("{} remove from proxy poll", address);
