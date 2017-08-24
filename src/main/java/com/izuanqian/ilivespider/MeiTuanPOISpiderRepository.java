@@ -298,4 +298,15 @@ public class MeiTuanPOISpiderRepository {
         private String address;
         private int port;
     }
+
+    public void saveProxy(List<ConfProxy> proxys) {
+        if (Objects.isNull(proxys) || proxys.isEmpty()) {
+            log.error("any proxy else?");
+            return;
+        }
+        HashOperations<String, String, String> hash = template.opsForHash();
+        Map<String, String> value = Maps.newHashMap();
+        proxys.forEach(it -> value.put(it.getAddress(), new Gson().toJson(it)));
+        hash.putAll("spider:mt:newproxy", value);
+    }
 }

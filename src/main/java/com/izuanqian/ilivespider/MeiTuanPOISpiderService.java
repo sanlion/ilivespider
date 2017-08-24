@@ -370,9 +370,16 @@ public class MeiTuanPOISpiderService {
         }
     }
 
-    public static void main(String[] args) {
-        List<Integer> list = Arrays.asList(1, 2, 3, 4);
-        Collections.shuffle(list);
-        System.out.println(list.stream().findAny().get());
+    @Scheduled(cron = "0 */7 * ? * *")
+    @SneakyThrows
+    public void loadProxy(){
+        String proxyHome = "http://www.xicidaili.com/nt/";
+        Document document = Jsoup.connect(proxyHome).get();
+        Element ip_list = document.getElementById("ip_list");
+        Elements tr = ip_list.select("tr");
+        List<MeiTuanPOISpiderRepository.ConfProxy> proxy = tr.stream().skip(1).limit(6).map(it -> it.select("td"))
+                .map(it -> new MeiTuanPOISpiderRepository.ConfProxy(it.get(1).text(), Integer.parseInt(it.get(2).text())))
+                .collect(Collectors.toList());
+        meiTuanPOISpiderRepository.saveProxy(proxy);
     }
 }
