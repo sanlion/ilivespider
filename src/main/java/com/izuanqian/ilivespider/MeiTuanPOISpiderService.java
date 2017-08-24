@@ -255,13 +255,16 @@ public class MeiTuanPOISpiderService {
 
     //        @Scheduled(cron = "*/12 * * ? * *")
     public void loadpoidetailquery() {
-
+        MeiTuanPOISpiderRepository.ConfProxy confProxy = meiTuanPOISpiderRepository.popProxy();
+        if (Objects.isNull(confProxy)) {
+            log.error("proxy pool is empty.");
+            return;
+        }
         MeiTuanPOISpiderRepository.PoppedQuery poppedQuery = meiTuanPOISpiderRepository.popPageQuery();
         if (Objects.isNull(poppedQuery)) {
             return;
         }
         log.info("{},{}", poppedQuery.getKey(), poppedQuery.getQuery());
-        MeiTuanPOISpiderRepository.ConfProxy confProxy = meiTuanPOISpiderRepository.popProxy();
         Document root = doc(poppedQuery.getQuery(), confProxy);
         Element content = root.getElementById("content");
         String poilist = content.select(".J-scrollloader").first().attr("data-async-params");
@@ -270,9 +273,9 @@ public class MeiTuanPOISpiderService {
             log.info("Opooos~ empty.");
             return;
         }
-        log.info("{}", li.size());
         meiTuanPOISpiderRepository.savePoi(
                 meiTuanPOISpiderRepository.key(poppedQuery.getQuery()), li);
+        log.info("{}", li.size());
     }
 
     // {home}/shop/{poi}
@@ -339,6 +342,9 @@ public class MeiTuanPOISpiderService {
             return;
         }
         MeiTuanPOISpiderRepository.PoppedQuery query = meiTuanPOISpiderRepository.popQuery();
+        if (Objects.isNull(query)) {
+            return;
+        }
         log.info("{},{}", query.getKey(), query.getQuery());
 
         try {
