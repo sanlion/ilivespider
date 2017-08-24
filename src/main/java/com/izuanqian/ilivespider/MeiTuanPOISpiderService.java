@@ -339,6 +339,7 @@ public class MeiTuanPOISpiderService {
         MeiTuanPOISpiderRepository.ConfProxy confProxy = meiTuanPOISpiderRepository.popProxy();
         if (Objects.isNull(confProxy)) {
             log.error("proxy pool is empty.");
+            loadProxy();
             return;
         }
         MeiTuanPOISpiderRepository.PoppedQuery query = meiTuanPOISpiderRepository.popQuery();
