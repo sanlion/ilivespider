@@ -295,7 +295,6 @@ public class MeiTuanPOISpiderRepository {
             log.info("{} remove from proxy poll", address);
             return;
         }
-        log.info("{} good proxy", address);
     }
 
     @Data
