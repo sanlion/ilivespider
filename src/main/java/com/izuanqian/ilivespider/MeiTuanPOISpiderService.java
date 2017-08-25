@@ -385,7 +385,7 @@ public class MeiTuanPOISpiderService {
     @Scheduled(cron = "0 */5 * ? * *")
     @SneakyThrows
     public void loadProxy() {
-        String proxyHome = "http://www.xicidaili.com/nn/";
+        String proxyHome = "http://www.xicidaili.com/wt/";
         Document document = Jsoup.connect(proxyHome).get();
         Element ip_list = document.getElementById("ip_list");
         Elements tr = ip_list.select("tr");
@@ -395,6 +395,7 @@ public class MeiTuanPOISpiderService {
         meiTuanPOISpiderRepository.saveProxy(proxy);
     }
 
+    @Scheduled(cron = "0 */8 * ? * *")
     @SneakyThrows
     public void loadNewProxy() {
         String proxyHome = "http://www.kuaidaili.com/free/inha/";
