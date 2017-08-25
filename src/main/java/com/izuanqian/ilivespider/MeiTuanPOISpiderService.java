@@ -401,7 +401,7 @@ public class MeiTuanPOISpiderService {
         Document document = Jsoup.connect(proxyHome).get();
         Element ip_list = document.getElementById("list");
         Elements tr = ip_list.select("tr");
-        List<MeiTuanPOISpiderRepository.ConfProxy> proxy = tr.stream().map(it -> it.select("td"))
+        List<MeiTuanPOISpiderRepository.ConfProxy> proxy = tr.stream().skip(1).limit(15).map(it -> it.select("td"))
                 .map(it -> new MeiTuanPOISpiderRepository.ConfProxy(it.get(0).text(), Integer.parseInt(it.get(1).text())))
                 .collect(Collectors.toList());
         meiTuanPOISpiderRepository.saveProxy(proxy);
