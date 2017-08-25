@@ -319,7 +319,7 @@ public class MeiTuanPOISpiderService {
         if (Objects.nonNull(confProxy)) {
             connection.proxy(confProxy.getAddress(), confProxy.getPort());
         }
-        connection.timeout(3000);
+        connection.timeout(5000);
         try {
             Document root = connection.get();
             meiTuanPOISpiderRepository.countProxy(confProxy.getAddress(), true);
