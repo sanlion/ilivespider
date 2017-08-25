@@ -346,7 +346,7 @@ public class MeiTuanPOISpiderService {
         MeiTuanPOISpiderRepository.ConfProxy confProxy = meiTuanPOISpiderRepository.popProxy();
         if (Objects.isNull(confProxy)) {
             log.error("proxy pool is empty.");
-            loadNewProxy();
+//            loadNewProxy();
             return;
         }
         MeiTuanPOISpiderRepository.PoppedQuery query = meiTuanPOISpiderRepository.popQuery();
@@ -396,7 +396,7 @@ public class MeiTuanPOISpiderService {
         meiTuanPOISpiderRepository.saveProxy(proxy);
     }
 
-    @Scheduled(cron = "0 */8 * ? * *")
+    @Scheduled(cron = "0 */3 * ? * *")
     @SneakyThrows
     public void loadNewProxy() {
         String proxyHome = "http://www.kuaidaili.com/free/inha/";
