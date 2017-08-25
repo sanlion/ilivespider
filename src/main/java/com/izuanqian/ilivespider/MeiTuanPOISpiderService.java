@@ -399,7 +399,7 @@ public class MeiTuanPOISpiderService {
     public void loadNewProxy() {
         String proxyHome = "http://www.kuaidaili.com/free/inha/";
         Document document = Jsoup.connect(proxyHome).get();
-        Element ip_list = document.getElementById("ip_list");
+        Element ip_list = document.getElementById("list");
         Elements tr = ip_list.select("tr");
         List<MeiTuanPOISpiderRepository.ConfProxy> proxy = tr.stream().map(it -> it.select("td"))
                 .map(it -> new MeiTuanPOISpiderRepository.ConfProxy(it.get(0).text(), Integer.parseInt(it.get(1).text())))
