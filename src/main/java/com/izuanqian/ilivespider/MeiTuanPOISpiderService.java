@@ -346,7 +346,7 @@ public class MeiTuanPOISpiderService {
         MeiTuanPOISpiderRepository.ConfProxy confProxy = meiTuanPOISpiderRepository.popProxy();
         if (Objects.isNull(confProxy)) {
             log.error("proxy pool is empty.");
-            loadProxy();
+            loadNewProxy();
             return;
         }
         MeiTuanPOISpiderRepository.PoppedQuery query = meiTuanPOISpiderRepository.popQuery();
@@ -382,15 +382,27 @@ public class MeiTuanPOISpiderService {
 
     @Value("${spider.proxy.loadsize}") int proxyLoadSize;
 
-    @Scheduled(cron = "0 */2 * ? * *")
+    @Scheduled(cron = "0 */5 * ? * *")
     @SneakyThrows
     public void loadProxy() {
-        String proxyHome = "http://www.xicidaili.com/nt/";
+        String proxyHome = "http://www.xicidaili.com/nn/";
         Document document = Jsoup.connect(proxyHome).get();
         Element ip_list = document.getElementById("ip_list");
         Elements tr = ip_list.select("tr");
         List<MeiTuanPOISpiderRepository.ConfProxy> proxy = tr.stream().skip(1).limit(proxyLoadSize).map(it -> it.select("td"))
                 .map(it -> new MeiTuanPOISpiderRepository.ConfProxy(it.get(1).text(), Integer.parseInt(it.get(2).text())))
+                .collect(Collectors.toList());
+        meiTuanPOISpiderRepository.saveProxy(proxy);
+    }
+
+    @SneakyThrows
+    public void loadNewProxy() {
+        String proxyHome = "http://www.kuaidaili.com/free/inha/";
+        Document document = Jsoup.connect(proxyHome).get();
+        Element ip_list = document.getElementById("ip_list");
+        Elements tr = ip_list.select("tr");
+        List<MeiTuanPOISpiderRepository.ConfProxy> proxy = tr.stream().map(it -> it.select("td"))
+                .map(it -> new MeiTuanPOISpiderRepository.ConfProxy(it.get(0).text(), Integer.parseInt(it.get(1).text())))
                 .collect(Collectors.toList());
         meiTuanPOISpiderRepository.saveProxy(proxy);
     }
