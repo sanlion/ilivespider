@@ -407,4 +407,52 @@ public class MeiTuanPOISpiderService {
                 .collect(Collectors.toList());
         meiTuanPOISpiderRepository.saveProxy(proxy);
     }
+
+    @SneakyThrows
+    public static void main(String[] args) {
+        String proxyHome = "http://www.stats.gov.cn/tjsj/tjbz/xzqhdm/201703/t20170310_1471429.html";
+        Document document = Jsoup.connect(proxyHome).get();
+        List<MeiTuanPOISpiderRepository.R> regions = document.select(".MsoNormal").stream().map(
+                it -> {
+                    Elements spans = it.select("span");
+                    return spans.text();
+                }
+        )
+                .map(it ->
+                        it
+                                .replaceAll("                  　", "")
+                                .replaceAll("          ", "")
+                                .replaceAll("　　", "")
+                                .replaceAll("　 ", "")
+                                .replaceAll(" ", "")
+                                .trim())
+                .map(it -> {
+                    String code = it.substring(0, 6);
+                    String name = it.substring(6, it.length());
+                    return new MeiTuanPOISpiderRepository.R(code, name);
+                }).collect(Collectors.toList());
+        List<MeiTuanPOISpiderRepository.R> provinces
+                = regions.stream().filter(it -> it.getCode().endsWith("0000")).collect(Collectors.toList());
+        System.out.println(provinces);
+        List<MeiTuanPOISpiderRepository.R> citys
+                = regions.stream().filter(
+                it -> it.getCode().endsWith("00") && !it.getCode().endsWith("0000"))
+                .map(it -> {
+                    it.setPCode(it.getCode().substring(0, 2) + "0000");
+                    return it;
+                })
+                .collect(Collectors.toList());
+        System.out.println(citys);
+
+        List<MeiTuanPOISpiderRepository.R> countys
+                = regions.stream().filter(
+                it -> !it.getCode().endsWith("00"))
+                .map(it -> {
+                    it.setPCode(it.getCode().substring(0, 4) + "00");
+                    return it;
+                })
+                .collect(Collectors.toList());
+        System.out.println(countys);
+    }
+
 }

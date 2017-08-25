@@ -329,4 +329,12 @@ public class MeiTuanPOISpiderRepository {
     public void saveFailTemp() {
         template.opsForList().leftPushAll("spider:mt:query_1", fail);
     }
+
+    @Data
+    @RequiredArgsConstructor
+    public static class R {
+        @NonNull private String code;
+        @NonNull private String name;
+        private String pCode;
+    }
 }
