@@ -410,7 +410,7 @@ public class MeiTuanPOISpiderService {
     }
 
     @SneakyThrows
-    public static void main(String[] args) {
+    public void loadRegion() {
         String proxyHome = "http://www.stats.gov.cn/tjsj/tjbz/xzqhdm/201703/t20170310_1471429.html";
         Document document = Jsoup.connect(proxyHome).get();
         List<MeiTuanPOISpiderRepository.R> regions = document.select(".MsoNormal").stream().map(
@@ -455,5 +455,65 @@ public class MeiTuanPOISpiderService {
                 .collect(Collectors.toList());
         System.out.println(countys);
     }
+
+
+    @Scheduled(cron = "0 */10 * ? * *")
+    public void loadPoi() {
+
+        MeiTuanPOISpiderRepository.ConfProxy confProxy = meiTuanPOISpiderRepository.popProxy();
+        if (Objects.isNull(confProxy)) {
+            log.error("proxy pool is empty.");
+//            loadNewProxy();
+            return;
+        }
+        String poi = meiTuanPOISpiderRepository.pop();
+        log.info("{} begin...", poi);
+        String url = Key.__("http://www.meituan.com/shop/{0}", poi);
+        MeiTuanPOISpiderRepository.DbPoi dbPoi = new MeiTuanPOISpiderRepository.DbPoi(poi);
+        Document document = doc(url, confProxy);
+        if (Objects.isNull(document)) {
+            meiTuanPOISpiderRepository.fail(poi);
+            return;
+        }
+        try {
+            Element summary = document.select(".summary").first();
+            summary.select(".branch-link").remove();
+            String title = summary.select(".title").first().text();
+            dbPoi.setTitle(title);
+            String address = summary.select(".geo").first().text();
+            dbPoi.setAddress(address);
+            String tel = summary.select("p").last().text();
+            dbPoi.setTel(tel);
+            double rating = Double.parseDouble(summary.select("strong").text());
+            dbPoi.setRating(rating);
+            String category = summary.select(".tag").first().text();
+            dbPoi.setCategory(category);
+            String geoJson = summary.getElementById("map-canvas").dataset().get("params");
+            MeiTuanPOISpiderRepository.MtGeo mtGeo = new Gson().fromJson(geoJson, MeiTuanPOISpiderRepository.MtGeo.class);
+            double[] position = mtGeo.getShops().get(poi).getPosition();
+            double lat = position[0];
+            double lng = position[1];
+            dbPoi.setLat(lat);
+            dbPoi.setLng(lng);
+            Element content = document.getElementById("content");
+            Elements c = content.select(".menu__items").select("table");
+            c.select("td").last().remove();
+            Elements select = c.select("td");
+            select.last().remove();
+            List<String> collect = select.stream().map(it -> it.text()).collect(Collectors.toList());
+            dbPoi.setDishes(collect);
+            Element shop = content.select(".cf").first();
+            shop.select(".J-toggle-biz-info").remove();
+            String shopDescription = shop.select(".long-biz-info").first().text();
+            dbPoi.setDescription(shopDescription);
+            String cover = shop.select(".img-wrapper > img").attr("src");
+            dbPoi.setCategory(cover);
+            meiTuanPOISpiderRepository.savePoi(dbPoi);
+            log.info("success");
+        } catch (Exception e) {
+            meiTuanPOISpiderRepository.fail(poi);
+        }
+    }
+
 
 }

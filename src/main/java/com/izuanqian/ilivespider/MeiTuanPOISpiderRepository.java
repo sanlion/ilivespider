@@ -337,4 +337,51 @@ public class MeiTuanPOISpiderRepository {
         @NonNull private String name;
         private String pCode;
     }
+
+    @Data
+    public static class Shop {
+
+        private double[] position;
+    }
+
+    @Data
+    public static class MtGeo {
+
+        private Map<String, Shop> shops;
+    }
+
+    @Data
+    @RequiredArgsConstructor
+    public static class DbPoi {
+
+        @NonNull private String id;
+        private String title;
+        private String address;
+        private double lat;
+        private double lng;
+        private double rating;
+        private String category;
+        private String tel;
+        private List<String> dishes = new ArrayList<>();
+        private String description;
+    }
+
+    public void savePoi(DbPoi value) {
+        String key = Key.__("spider:mt:poi_{0}", value.getId());
+        template.opsForValue().set(key, new Gson().toJson(value));
+    }
+
+    public String pop() {
+        Set<String> keys = template.keys(Key.__("spider:mt:poi:{0}", "*"));
+        if (Objects.isNull(keys) || keys.isEmpty()) {
+            log.error("poi empty.");
+        }
+        String key = keys.stream().findAny().get();
+        return template.opsForValue().get(key);
+    }
+
+    public void fail(String poi) {
+        template.opsForSet().add("spider:mt:poi:fail", poi);
+        log.info("rollback success.");
+    }
 }
